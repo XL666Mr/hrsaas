@@ -7,12 +7,18 @@ export function login(data) {
     data
   })
 }
-
-export function getInfo(token) {
+// 获取用户基本信息
+export function getInfo() {
   return request({
-    url: '/vue-admin-template/user/info',
-    method: 'get',
-    params: { token }
+    url: '/sys/profile',
+    method: 'POST'
+  })
+}
+// 获取用户其他全部信息
+export function getOtherInfo(id) {
+  return request({
+    url: '/sys/user/' + id,
+    method: 'GET'
   })
 }
 
