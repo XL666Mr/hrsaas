@@ -11,7 +11,7 @@ const service = axios.create({
 function isTimeOut() {
   const currentTime = Date.now()
   const tokenTime = getTokenTime()
-  const timeout = 10 * 1000
+  const timeout = 60 * 60 * 2 * 1000
   return currentTime - tokenTime > timeout
 }
 //请求拦截器
@@ -39,11 +39,11 @@ service.interceptors.response.use(
     }
   },
   async (error) => {
-    if(error?.response?.status === 401){
+    if (error?.response?.status === 401) {
       Message.error('登录过期')
       await store.dispatch('user/logout')
       router.push('/login')
-    }else{
+    } else {
       Message.error(error.message)
     }
     return Promise.reject(error)
