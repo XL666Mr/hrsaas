@@ -23,7 +23,6 @@ export default {
     async getUserInfo(context) {
       const Info = await getInfo()
       const OtherInfo = await getOtherInfo(Info.userId)
-      console.log(OtherInfo)
       context.commit('setUserInfo', { ...Info, ...OtherInfo })
     },
     logout(context) {
