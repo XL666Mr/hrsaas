@@ -1,6 +1,11 @@
 <template>
   <div>
-    <el-dialog title="提示" :visible="visible" width="30%"  :before-close="onClose">
+    <el-dialog
+      :title="title"
+      :visible="visible"
+      width="30%"
+      :before-close="onClose"
+    >
       <el-form
         ref="form"
         :model="formData"
@@ -50,22 +55,47 @@
 </template>
 
 <script>
-import { getDeptsApi, addDepartment } from '@/api/departments'
+import {
+  getDeptsApi,
+  addDepartment,
+  getDepartment,
+  editDepartment
+} from '@/api/departments'
 import { getEmployees } from '@/api/employees'
 
 export default {
   data() {
-    const checkName = (rule, value, callback) => {
-      console.log(this.currentNode)
-      const isRpeact = this.currentNode.children?.some((ele) => {
-        ele.name === value
-      })
-      isRpeact ? callback(new Error('部门重复')) : callback()
+    // 部门名称
+    const checkName = async (rule, value, callback) => {
+      if (this.formData.id) {
+        const { depts } = await getDeptsApi()
+        console.log(depts)
+        const filtersDepts = depts.filter((item) => {
+          return item.pid === this.formData.pid && item.id !== this.formData.id
+        })
+        console.log(filtersDepts)
+        const isRpeact = filtersDepts.some((item) => item.name === value)
+        isRpeact ? callback(new Error('部门重复')) : callback()
+      } else {
+        if (!this.currentNode.children) return callback()
+        const isRpeact = this.currentNode.children.some((ele) => {
+          ele.name === value
+        })
+        isRpeact ? callback(new Error('部门重复')) : callback()
+      }
     }
+
+    // 部门编码
     const checkCode = async (rule, value, callback) => {
       const { depts } = await getDeptsApi()
-      console.log(depts)
-      const isRpeact = depts.some((ele) => ele.code === value)
+      let isRpeact
+      if (this.formData.id) {
+        isRpeact = depts
+          .filter((item) => item.id !== this.formData.id)
+          .some((ele) => ele.code === value)
+      } else {
+        isRpeact = depts.some((ele) => ele.code === value)
+      }
       isRpeact ? callback(new Error('部门编码重复')) : callback()
     }
     return {
@@ -122,22 +152,43 @@ export default {
     },
     onClose() {
       this.$emit('update:visible', false)
+      this.$refs.form.resetFields()
+      this.formData = {
+        name: '',
+        code: '',
+        manager: '',
+        introduce: ''
+      }
     },
     async onSave() {
       await this.$refs.form.validate()
       this.formData.pid = this.currentNode.id
       try {
-        await addDepartment(this.formData)
-        this.$message.success('添加成功')
-        this.onClose()
-        this.$emit('addSuccess')
+        if (this.formData.id) {
+          await editDepartment(this.formData)
+          this.$message.success('编辑成功')
+          this.onClose()
+          this.$emit('addSuccess')
+        } else {
+          await addDepartment(this.formData)
+          this.$message.success('添加成功')
+          this.onClose()
+          this.$emit('addSuccess')
+        }
       } catch (error) {
-        this.$message.error('添加失败')
+        this.$message.error('操作部门失败')
       }
+    },
+    async getDeptById(id) {
+      this.formData = await getDepartment(id)
     }
   },
 
-  computed: {}
+  computed: {
+    title() {
+      return this.formData.id ? '编辑部门' : '添加部门'
+    }
+  }
 }
 </script>
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="dashboard-container">
+  <div class="dashboard-container" v-loading="loading">
     <div class="app-container">
       <el-card class="box-card">
         <!-- 头部 -->
@@ -15,12 +15,14 @@
               :treeNode="scoped.data"
               @remove="getDeptsApi"
               @add="showAddDept"
+              @edit="showEdit"
             ></TreeTools>
           </template>
         </el-tree>
       </el-card>
     </div>
     <AddDept
+      ref="addDept"
       @addSuccess="addSuccess"
       :visible.sync="dialogVisible"
       :currentNode="currentNode"
@@ -57,7 +59,8 @@ export default {
       },
       company: { name: '传智教育', manager: '负责人' },
       dialogVisible: false,
-      currentNode: {}
+      currentNode: {},
+      loading: false
     }
   },
 
@@ -67,14 +70,20 @@ export default {
 
   methods: {
     async getDeptsApi() {
+      this.loading = true
       const res = await getDeptsApi()
       this.dataList = a(res.depts, '')
+       this.loading = false
     },
     showAddDept(val) {
       ;(this.dialogVisible = true), (this.currentNode = val)
     },
     addSuccess() {
       this.getDeptsApi()
+    },
+    showEdit(val) {
+      this.dialogVisible = true
+      this.$refs.addDept.getDeptById(val.id)
     }
   },
   components: {
